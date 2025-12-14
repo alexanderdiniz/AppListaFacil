@@ -348,6 +348,51 @@
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast i { color: var(--color1); }
 
+        /* --- MODAL PERSONALIZADO --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-box {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 30px;
+            max-width: 90%; width: 380px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+        .modal-overlay.active .modal-box { transform: translateY(0) scale(1); }
+
+        .modal-icon-box {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: rgba(255, 71, 87, 0.1); color: var(--color-danger);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin: 0 auto 20px;
+            border: 2px solid rgba(255, 71, 87, 0.2);
+        }
+
+        .modal-title { font-size: 1.3rem; font-weight: 800; margin: 0 0 10px 0; color: var(--text-main); }
+        .modal-text { color: var(--text-muted); margin: 0 0 25px 0; font-size: 0.95rem; line-height: 1.5; }
+
+        .modal-actions { display: flex; gap: 12px; justify-content: center; }
+
+        .btn-modal {
+            padding: 12px 20px; border-radius: var(--radius-sm); border: none;
+            font-weight: 700; cursor: pointer; transition: var(--transition);
+            flex: 1; font-size: 0.95rem;
+        }
+        .btn-modal-cancel { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-modal-cancel:hover { background: var(--border); }
+
+        .btn-modal-confirm { background: var(--color-danger); color: white; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3); }
+        .btn-modal-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4); }
+
         @media (max-width: 480px) {
             .app { padding: 10px; }
             .card { padding: 20px; }
@@ -355,6 +400,7 @@
             .total-card { flex-direction: column; gap: 15px; text-align: center; }
             .total-card::before { width: 100%; height: 4px; bottom: auto; }
             .rodape-actions { flex-direction: column; align-items: center; }
+            .modal-actions { flex-direction: column; }
         }
 
         /* --- ESTILOS DE IMPRESSÃO (PDF) --- */
@@ -364,7 +410,7 @@
             .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
             
             /* Esconder elementos desnecessários na impressão */
-            .theme-toggle, .form, .filtros, .item-acoes, .rodape-actions, #toast, #btn-calcular { 
+            .theme-toggle, .form, .filtros, .item-acoes, .rodape-actions, #toast, #btn-calcular, .modal-overlay { 
                 display: none !important; 
             }
             
@@ -485,6 +531,19 @@
         </main>
     </div>
 
+    <!-- MODAL DE CONFIRMAÇÃO PERSONALIZADO -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon-box"><i class="fas fa-trash-alt"></i></div>
+            <h3 class="modal-title">Tem a certeza?</h3>
+            <p id="modal-msg" class="modal-text">Esta ação é irreversível.</p>
+            <div class="modal-actions">
+                <button id="modal-btn-cancel" class="btn-modal btn-modal-cancel">Cancelar</button>
+                <button id="modal-btn-confirm" class="btn-modal btn-modal-confirm">Sim, apagar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast">
         <i class="fas fa-check-circle"></i> <span id="toast-msg">Sucesso</span>
     </div>
@@ -502,9 +561,15 @@
         const inputPreco = document.getElementById("item-preco");
         const btnSubmit = document.getElementById("btn-submit");
         const btnCancelEdit = document.getElementById("btn-cancel-edit");
-        const btnText = document.getElementById("btn-text");
         const listaEl = document.getElementById("lista-itens");
         const totalEl = document.getElementById("texto-total");
+
+        // Modal Elements
+        const modal = document.getElementById('custom-modal');
+        const modalMsg = document.getElementById('modal-msg');
+        const modalBtnConfirm = document.getElementById('modal-btn-confirm');
+        const modalBtnCancel = document.getElementById('modal-btn-cancel');
+        let modalResolve = null;
 
         // Init
         document.addEventListener("DOMContentLoaded", () => {
@@ -513,6 +578,26 @@
             renderizar();
             calcularTotal();
         });
+
+        // Modal Logic
+        function showConfirm(message) {
+            modalMsg.textContent = message;
+            modal.classList.add('active');
+            return new Promise((resolve) => {
+                modalResolve = resolve;
+            });
+        }
+
+        function closeConfirm(result) {
+            modal.classList.remove('active');
+            if (modalResolve) {
+                modalResolve(result);
+                modalResolve = null;
+            }
+        }
+
+        modalBtnConfirm.onclick = () => closeConfirm(true);
+        modalBtnCancel.onclick = () => closeConfirm(false);
 
         // Events
         form.addEventListener("submit", (e) => {
@@ -530,22 +615,24 @@
         });
 
         document.getElementById("btn-exportar-pdf").addEventListener("click", () => {
-             // Dica visual antes de imprimir
             mostrarToast("Gerando PDF...");
             setTimeout(() => {
                 window.print();
             }, 500);
         });
 
-        document.getElementById("btn-limpar-comprados").addEventListener("click", () => {
+        document.getElementById("btn-limpar-comprados").addEventListener("click", async () => {
             const count = itens.filter(i => i.comprado).length;
-            if (count > 0 && confirm(`Excluir ${count} itens comprados?`)) {
-                itens = itens.filter(i => !i.comprado);
-                persistir();
-                renderizar();
-                mostrarToast("Lista limpa!");
-            } else if (count === 0) {
-                mostrarToast("Nenhum item comprado.");
+            if (count > 0) {
+                const confirmado = await showConfirm(`Tem a certeza que deseja apagar definitivamente os ${count} itens marcados como comprados?`);
+                if (confirmado) {
+                    itens = itens.filter(i => !i.comprado);
+                    persistir();
+                    renderizar();
+                    mostrarToast("Lista de comprados limpa com sucesso!");
+                }
+            } else {
+                mostrarToast("Não há itens comprados para limpar.");
             }
         });
 
@@ -572,15 +659,13 @@
             };
 
             if (editandoId) {
-                // Editar existente
                 const index = itens.findIndex(i => i.id === editandoId);
                 if (index > -1) {
-                    itemData.comprado = itens[index].comprado; // Manter status
+                    itemData.comprado = itens[index].comprado;
                     itens[index] = itemData;
                     mostrarToast("Item atualizado!");
                 }
             } else {
-                // Criar novo
                 itens.unshift(itemData);
                 mostrarToast("Item adicionado!");
             }
@@ -600,7 +685,6 @@
             inputQtd.value = item.quantidade;
             inputPreco.value = item.preco || "";
             
-            // UI Change
             form.classList.add("edit-mode");
             btnSubmit.innerHTML = '<i class="fas fa-save"></i> <span>Salvar Alteração</span>';
             btnCancelEdit.style.display = "block";
@@ -612,12 +696,9 @@
             form.reset();
             inputQtd.value = "1";
             
-            // UI Reset
             form.classList.remove("edit-mode");
             btnSubmit.innerHTML = '<i class="fas fa-plus"></i> <span>Adicionar</span>';
             btnCancelEdit.style.display = "none";
-            
-            // Remove highlight visual da lista
             document.querySelectorAll(".lista-item").forEach(el => el.classList.remove("editing"));
         }
 
@@ -625,8 +706,6 @@
             const index = itens.findIndex(i => i.id === id);
             if (index > -1) {
                 itens[index].comprado = !itens[index].comprado;
-                
-                // Mover para o fim se comprado, ou topo se pendente
                 const item = itens.splice(index, 1)[0];
                 if (item.comprado) itens.push(item);
                 else itens.unshift(item);
@@ -637,8 +716,9 @@
             }
         }
 
-        function deletarItem(id) {
-            if (confirm("Remover item?")) {
+        async function deletarItem(id) {
+            const confirmado = await showConfirm("Deseja realmente remover este item da sua lista?");
+            if (confirmado) {
                 itens = itens.filter(i => i.id !== id);
                 if (editandoId === id) resetForm();
                 persistir();
@@ -667,33 +747,67 @@
                 document.getElementById("mensagem-vazia").style.display = "block";
             } else {
                 document.getElementById("mensagem-vazia").style.display = "none";
+                
                 filtrados.forEach(item => {
                     const li = document.createElement("li");
                     li.className = `lista-item ${item.comprado ? 'comprado' : ''}`;
                     if(editandoId === item.id) li.classList.add("editing");
 
-                    li.innerHTML = `
-                        <div class="item-esquerda">
-                            <div class="checkbox-wrapper" onclick="toggleStatus(${item.id})">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <div class="item-info">
-                                <span class="item-nome">${item.nome}</span>
-                                <div class="badges">
-                                    <span class="badge badge-qtd">${item.quantidade}x</span>
-                                    ${item.preco > 0 ? `<span class="badge badge-preco">R$ ${item.preco.toFixed(2)}</span>` : ''}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item-acoes">
-                            <button class="btn-icon edit" onclick="iniciarEdicao(${item.id})">
-                                <i class="fas fa-pen"></i>
-                            </button>
-                            <button class="btn-icon delete" onclick="deletarItem(${item.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
+                    const divLeft = document.createElement('div');
+                    divLeft.className = 'item-esquerda';
+
+                    const divCheck = document.createElement('div');
+                    divCheck.className = 'checkbox-wrapper';
+                    divCheck.innerHTML = '<i class="fas fa-check"></i>';
+                    divCheck.onclick = () => toggleStatus(item.id);
+
+                    const divInfo = document.createElement('div');
+                    divInfo.className = 'item-info';
+                    
+                    const spanNome = document.createElement('span');
+                    spanNome.className = 'item-nome';
+                    spanNome.textContent = item.nome;
+
+                    const divBadges = document.createElement('div');
+                    divBadges.className = 'badges';
+                    
+                    const badgeQtd = document.createElement('span');
+                    badgeQtd.className = 'badge badge-qtd';
+                    badgeQtd.textContent = `${item.quantidade}x`;
+                    divBadges.appendChild(badgeQtd);
+
+                    if (item.preco > 0) {
+                        const badgePreco = document.createElement('span');
+                        badgePreco.className = 'badge badge-preco';
+                        badgePreco.textContent = `R$ ${item.preco.toFixed(2)}`;
+                        divBadges.appendChild(badgePreco);
+                    }
+
+                    divInfo.appendChild(spanNome);
+                    divInfo.appendChild(divBadges);
+                    divLeft.appendChild(divCheck);
+                    divLeft.appendChild(divInfo);
+
+                    const divActions = document.createElement('div');
+                    divActions.className = 'item-acoes';
+
+                    const btnEdit = document.createElement('button');
+                    btnEdit.className = 'btn-icon edit';
+                    btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
+                    btnEdit.onclick = () => iniciarEdicao(item.id);
+
+                    const btnDelete = document.createElement('button');
+                    btnDelete.className = 'btn-icon delete';
+                    btnDelete.innerHTML = '<i class="fas fa-trash"></i>';
+                    // Usando função assíncrona corretamente
+                    btnDelete.onclick = () => deletarItem(item.id);
+
+                    divActions.appendChild(btnEdit);
+                    divActions.appendChild(btnDelete);
+
+                    li.appendChild(divLeft);
+                    li.appendChild(divActions);
+
                     listaEl.appendChild(li);
                 });
             }
