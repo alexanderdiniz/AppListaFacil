@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8" />
+    <title>Lista de Compras - Versão Completa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* --- PALETA DE CORES (Mantida da v8) --- */
+            --color1: #fea304; 
+            --color1-hover: #e59200;
+            --color2: #a3a628; 
+            --color2-dark: #7a7d1e;
+            --color3: #2ecc71; 
+            --color3-dark: #27ae60;
+            --color-danger: #ff4757;
+
+            /* Modo Escuro (Dark Mode) */
+            --bg-dark-page: #121212;
+            --bg-dark-card: #1e1e1e;
+            --bg-dark-input: #2d2d2d;
+            --border-dark: #404040;
+            --text-dark-primary: #f0f0f0;
+            --text-dark-secondary: #a0a0a0;
+            
+            /* Modo Claro (Light Mode) */
+            --bg-light-page: #f0f2f5;
+            --bg-light-card: #ffffff;
+            --bg-light-input: #f8f9fa;
+            --border-light: #e0e0e0;
+            --text-light-primary: #1a1a1a;
+            --text-light-secondary: #666666;
+
+            /* Botões */
+            --btn-text-on-primary: #220315; 
+            
+            /* Layout */
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-glow: 0 0 20px rgba(254, 163, 4, 0.2);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html[data-theme="light"] {
+            --bg-main: var(--bg-light-page);
+            --bg-card: var(--bg-light-card);
+            --text-main: var(--text-light-primary);
+            --text-muted: var(--text-light-secondary);
+            --border: var(--border-light);
+            --input-bg: var(--bg-light-input);
+            --input-border: #cbd5e1;
+            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+            --card-highlight: rgba(254, 163, 4, 0.05);
+        }
+
+        html[data-theme="dark"] {
+            --bg-main: var(--bg-dark-page);
+            --bg-card: var(--bg-dark-card);
+            --text-main: var(--text-dark-primary);
+            --text-muted: var(--text-dark-secondary);
+            --border: var(--border-dark);
+            --input-bg: var(--bg-dark-input);
+            --input-border: #525252;
+            --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            --card-highlight: rgba(254, 163, 4, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--bg-main);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            line-height: 1.6;
+        }
+
+        .app {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- UI COMPONENTS --- */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; }
+        
+        .logo-icon {
+            width: 44px; height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--color1), var(--color1-hover));
+            display: flex; align-items: center; justify-content: center;
+            color: var(--btn-text-on-primary);
+            font-size: 1.4rem;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .logo-text h1 {
+            margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--text-main), var(--text-muted));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text .subtitle {
+            font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;
+        }
+
+        .theme-toggle {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-main);
+            transition: var(--transition);
+        }
+        .theme-toggle:hover { border-color: var(--color1); color: var(--color1); }
+
+        /* FORM */
+        .form {
+            background: var(--card-highlight);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            border: 1px dashed var(--border);
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+        
+        .form.edit-mode {
+            border-color: var(--color1);
+            background: rgba(254, 163, 4, 0.1);
+        }
+
+        .form-row { display: flex; gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; flex: 1; }
+        
+        label {
+            font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .input-wrapper { position: relative; }
+        .input-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 1rem; pointer-events: none;
+        }
+
+        input {
+            width: 100%; padding: 14px 14px 14px 42px;
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-size: 0.95rem; font-weight: 600;
+            outline: none; transition: var(--transition);
+        }
+        input:focus { border-color: var(--color1); }
+
+        #btn-submit {
+            width: 100%; padding: 16px;
+            border: none; border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--color1), var(--color1-hover));
+            color: var(--btn-text-on-primary);
+            font-weight: 800; font-size: 1rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(254, 163, 4, 0.3);
+            margin-top: 8px;
+        }
+        #btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(254, 163, 4, 0.4); }
+        
+        #btn-cancel-edit {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            margin-top: 8px;
+            width: 100%; padding: 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            display: none; /* Hidden by default */
+        }
+        #btn-cancel-edit:hover { background: var(--border); color: var(--text-main); }
+
+        /* LIST & FILTERS */
+        .lista-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+        }
+        .lista-header h2 { margin: 0; font-size: 1.2rem; color: var(--text-main); }
+
+        .filtros {
+            display: flex; background: var(--input-bg);
+            padding: 4px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .chip-filtro {
+            border: none; background: transparent;
+            color: var(--text-muted); padding: 8px 16px;
+            border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition);
+        }
+        .chip-filtro.ativo {
+            background: var(--color1); color: var(--btn-text-on-primary);
+            box-shadow: 0 2px 8px rgba(254, 163, 4, 0.3);
+        }
+
+        .lista {
+            list-style: none; padding: 0; margin: 0;
+            max-height: 50vh; overflow-y: auto;
+            padding-right: 4px;
+        }
+        .lista::-webkit-scrollbar { width: 4px; }
+        .lista::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .lista-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 16px; border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: var(--transition);
+        }
+        .lista-item:hover { border-color: var(--color1); transform: translateX(2px); }
+
+        .lista-item.comprado {
+            opacity: 0.6;
+            background: rgba(46, 204, 113, 0.05);
+            border-color: transparent;
+        }
+        .lista-item.comprado .item-nome {
+            text-decoration: line-through; color: var(--text-muted);
+        }
+        .lista-item.editing {
+            border: 2px solid var(--color1);
+            background: rgba(254, 163, 4, 0.05);
+        }
+
+        .item-esquerda { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+
+        .checkbox-wrapper {
+            width: 24px; height: 24px;
+            border-radius: 8px; border: 2px solid var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: var(--transition); flex-shrink: 0;
+        }
+        .lista-item.comprado .checkbox-wrapper {
+            background: var(--color3); border-color: var(--color3); color: white;
+        }
+        .checkbox-wrapper i { transform: scale(0); transition: 0.2s; font-size: 0.7rem; }
+        .lista-item.comprado .checkbox-wrapper i { transform: scale(1); }
+
+        .item-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+        .item-nome { font-weight: 700; font-size: 1rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .badges { display: flex; gap: 8px; }
+        .badge {
+            font-size: 0.75rem; padding: 2px 8px; border-radius: 6px; font-weight: 700;
+        }
+        .badge-qtd { background: rgba(254, 163, 4, 0.15); color: var(--color1); }
+        .badge-preco { background: rgba(163, 166, 40, 0.15); color: var(--color2); }
+
+        .item-acoes { display: flex; gap: 4px; }
+        .btn-icon {
+            width: 32px; height: 32px; border-radius: 8px; border: none;
+            background: transparent; color: var(--text-muted);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+        .btn-icon:hover { background: var(--input-bg); color: var(--text-main); }
+        .btn-icon.edit:hover { color: var(--color1); background: rgba(254, 163, 4, 0.1); }
+        .btn-icon.delete:hover { color: var(--color-danger); background: rgba(255, 71, 87, 0.1); }
+
+        /* FOOTER */
+        .rodape { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px; }
+        
+        .total-card {
+            background: linear-gradient(135deg, var(--bg-dark-card), var(--bg-dark-page));
+            border: 1px solid var(--color1); border-radius: var(--radius-md);
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            position: relative; overflow: hidden;
+        }
+        html[data-theme="light"] .total-card { background: linear-gradient(135deg, #fff, #f8f9fa); }
+        .total-card::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--color1);
+        }
+        
+        .total-valor { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
+        .btn-calcular {
+            background: var(--color1); color: var(--btn-text-on-primary);
+            border: none; padding: 10px 20px; border-radius: var(--radius-sm);
+            font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        
+        .rodape-actions {
+            display: flex; justify-content: space-between; margin-top: 12px; gap: 10px;
+        }
+        .btn-link {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-link:hover { color: var(--color-danger); text-decoration: underline; }
+        .btn-link.secondary:hover { color: var(--color1); }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--text-muted); display: none; }
+        .empty-state i { font-size: 3rem; margin-bottom: 10px; opacity: 0.3; }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card); color: var(--text-main);
+            padding: 12px 24px; border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: 1px solid var(--border);
+            z-index: 1000; font-weight: 600; opacity: 0; transition: all 0.4s;
+            display: flex; align-items: center; gap: 10px; width: max-content;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast i { color: var(--color1); }
+
+        @media (max-width: 480px) {
+            .app { padding: 10px; }
+            .card { padding: 20px; }
+            .form-row { flex-direction: column; }
+            .total-card { flex-direction: column; gap: 15px; text-align: center; }
+            .total-card::before { width: 100%; height: 4px; bottom: auto; }
+            .rodape-actions { flex-direction: column; align-items: center; }
+        }
+
+        /* --- ESTILOS DE IMPRESSÃO (PDF) --- */
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            .app { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+            .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            
+            /* Esconder elementos desnecessários na impressão */
+            .theme-toggle, .form, .filtros, .item-acoes, .rodape-actions, #toast, #btn-calcular { 
+                display: none !important; 
+            }
+            
+            .lista { max-height: none !important; overflow: visible !important; }
+            .lista-item { 
+                break-inside: avoid; 
+                border: 1px solid #ccc !important;
+                background: transparent !important;
+                color: #000 !important;
+                margin-bottom: 5px !important;
+            }
+            
+            .item-nome { color: #000 !important; }
+            .badge { border: 1px solid #000 !important; color: #000 !important; background: transparent !important; }
+            
+            .header h1 { color: #000 !important; }
+            .subtitle { color: #555 !important; }
+            .total-card { 
+                border: 1px solid #000 !important; 
+                background: transparent !important; 
+                color: #000 !important;
+            }
+            .total-valor { color: #000 !important; }
+            .total-card::before { display: none; }
+            
+            /* Manter checkbox visual apenas */
+            .checkbox-wrapper { border-color: #000 !important; }
+            .lista-item.comprado .checkbox-wrapper { background: #ddd !important; border-color: #000 !important; color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <main class="card">
+            <header class="header">
+                <div class="logo">
+                    <div class="logo-icon"><i class="fas fa-shopping-basket"></i></div>
+                    <div class="logo-text">
+                        <h1>Lista Fácil</h1>
+                        <span class="subtitle">Organize suas compras</span>
+                    </div>
+                </div>
+                <button class="theme-toggle" id="btn-theme"><i class="fas fa-moon"></i></button>
+            </header>
+
+            <!-- FORMULÁRIO -->
+            <form id="form-compra" class="form">
+                <input type="hidden" id="edit-id" value="">
+                
+                <div class="form-group">
+                    <label for="item-nome">Item</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="item-nome" placeholder="O que você precisa comprar?" autocomplete="off">
+                        <i class="fas fa-tag input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-quantidade">Qtd</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="item-quantidade" min="1" value="1">
+                            <i class="fas fa-hashtag input-icon"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-preco">Preço (R$)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="item-preco" min="0" step="0.01" placeholder="0.00">
+                            <i class="fas fa-dollar-sign input-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit">
+                    <i class="fas fa-plus"></i> <span id="btn-text">Adicionar</span>
+                </button>
+                <button type="button" id="btn-cancel-edit">Cancelar Edição</button>
+            </form>
+
+            <!-- LISTA -->
+            <div class="lista-container">
+                <div class="lista-header">
+                    <h2>Itens</h2>
+                    <div class="filtros">
+                        <button class="chip-filtro ativo" data-filtro="todos">Todos</button>
+                        <button class="chip-filtro" data-filtro="pendentes">Pendentes</button>
+                        <button class="chip-filtro" data-filtro="comprados">OK</button>
+                    </div>
+                </div>
+
+                <ul id="lista-itens" class="lista"></ul>
+
+                <div id="mensagem-vazia" class="empty-state">
+                    <i class="fas fa-clipboard-check"></i>
+                    <p>Tudo limpo por aqui!</p>
+                </div>
+            </div>
+
+            <!-- RODAPÉ -->
+            <div class="rodape">
+                <div class="total-card">
+                    <div>
+                        <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600">Total (Pendentes)</span>
+                        <div id="texto-total" class="total-valor">R$ 0,00</div>
+                    </div>
+                    <button id="btn-calcular" class="btn-calcular"><i class="fas fa-sync-alt"></i> Atualizar</button>
+                </div>
+                <div class="rodape-actions">
+                    <button id="btn-exportar-pdf" class="btn-link secondary">
+                        <i class="fas fa-file-pdf"></i> Baixar PDF
+                    </button>
+                    <button id="btn-limpar-comprados" class="btn-link">
+                        <i class="fas fa-trash"></i> Limpar itens comprados
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i> <span id="toast-msg">Sucesso</span>
+    </div>
+
+    <script>
+        const STORAGE_KEY = "lista_v9_db";
+        let itens = [];
+        let filtroAtual = "todos";
+        let editandoId = null;
+
+        // Elements
+        const form = document.getElementById("form-compra");
+        const inputNome = document.getElementById("item-nome");
+        const inputQtd = document.getElementById("item-quantidade");
+        const inputPreco = document.getElementById("item-preco");
+        const btnSubmit = document.getElementById("btn-submit");
+        const btnCancelEdit = document.getElementById("btn-cancel-edit");
+        const btnText = document.getElementById("btn-text");
+        const listaEl = document.getElementById("lista-itens");
+        const totalEl = document.getElementById("texto-total");
+
+        // Init
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarDados();
+            carregarTema();
+            renderizar();
+            calcularTotal();
+        });
+
+        // Events
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            salvarItem();
+        });
+
+        btnCancelEdit.addEventListener("click", resetForm);
+
+        document.getElementById("btn-theme").addEventListener("click", toggleTheme);
+        
+        document.getElementById("btn-calcular").addEventListener("click", () => {
+            calcularTotal();
+            mostrarToast("Total atualizado!");
+        });
+
+        document.getElementById("btn-exportar-pdf").addEventListener("click", () => {
+             // Dica visual antes de imprimir
+            mostrarToast("Gerando PDF...");
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        });
+
+        document.getElementById("btn-limpar-comprados").addEventListener("click", () => {
+            const count = itens.filter(i => i.comprado).length;
+            if (count > 0 && confirm(`Excluir ${count} itens comprados?`)) {
+                itens = itens.filter(i => !i.comprado);
+                persistir();
+                renderizar();
+                mostrarToast("Lista limpa!");
+            } else if (count === 0) {
+                mostrarToast("Nenhum item comprado.");
+            }
+        });
+
+        document.querySelectorAll(".chip-filtro").forEach(chip => {
+            chip.addEventListener("click", (e) => {
+                document.querySelectorAll(".chip-filtro").forEach(c => c.classList.remove("ativo"));
+                e.target.classList.add("ativo");
+                filtroAtual = e.target.dataset.filtro;
+                renderizar();
+            });
+        });
+
+        // Functions
+        function salvarItem() {
+            const nome = inputNome.value.trim();
+            if (!nome) return mostrarToast("Digite o nome do item!");
+
+            const itemData = {
+                id: editandoId || Date.now(),
+                nome: nome,
+                quantidade: Number(inputQtd.value) || 1,
+                preco: Number(inputPreco.value) || 0,
+                comprado: false
+            };
+
+            if (editandoId) {
+                // Editar existente
+                const index = itens.findIndex(i => i.id === editandoId);
+                if (index > -1) {
+                    itemData.comprado = itens[index].comprado; // Manter status
+                    itens[index] = itemData;
+                    mostrarToast("Item atualizado!");
+                }
+            } else {
+                // Criar novo
+                itens.unshift(itemData);
+                mostrarToast("Item adicionado!");
+            }
+
+            persistir();
+            resetForm();
+            renderizar();
+            calcularTotal();
+        }
+
+        function iniciarEdicao(id) {
+            const item = itens.find(i => i.id === id);
+            if (!item) return;
+
+            editandoId = id;
+            inputNome.value = item.nome;
+            inputQtd.value = item.quantidade;
+            inputPreco.value = item.preco || "";
+            
+            // UI Change
+            form.classList.add("edit-mode");
+            btnSubmit.innerHTML = '<i class="fas fa-save"></i> <span>Salvar Alteração</span>';
+            btnCancelEdit.style.display = "block";
+            inputNome.focus();
+        }
+
+        function resetForm() {
+            editandoId = null;
+            form.reset();
+            inputQtd.value = "1";
+            
+            // UI Reset
+            form.classList.remove("edit-mode");
+            btnSubmit.innerHTML = '<i class="fas fa-plus"></i> <span>Adicionar</span>';
+            btnCancelEdit.style.display = "none";
+            
+            // Remove highlight visual da lista
+            document.querySelectorAll(".lista-item").forEach(el => el.classList.remove("editing"));
+        }
+
+        function toggleStatus(id) {
+            const index = itens.findIndex(i => i.id === id);
+            if (index > -1) {
+                itens[index].comprado = !itens[index].comprado;
+                
+                // Mover para o fim se comprado, ou topo se pendente
+                const item = itens.splice(index, 1)[0];
+                if (item.comprado) itens.push(item);
+                else itens.unshift(item);
+                
+                persistir();
+                renderizar();
+                calcularTotal();
+            }
+        }
+
+        function deletarItem(id) {
+            if (confirm("Remover item?")) {
+                itens = itens.filter(i => i.id !== id);
+                if (editandoId === id) resetForm();
+                persistir();
+                renderizar();
+                calcularTotal();
+                mostrarToast("Item removido.");
+            }
+        }
+
+        function calcularTotal() {
+            const total = itens
+                .filter(i => !i.comprado)
+                .reduce((acc, i) => acc + (i.preco * i.quantidade), 0);
+            totalEl.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function renderizar() {
+            listaEl.innerHTML = "";
+            const filtrados = itens.filter(i => {
+                if (filtroAtual === "pendentes") return !i.comprado;
+                if (filtroAtual === "comprados") return i.comprado;
+                return true;
+            });
+
+            if (filtrados.length === 0) {
+                document.getElementById("mensagem-vazia").style.display = "block";
+            } else {
+                document.getElementById("mensagem-vazia").style.display = "none";
+                filtrados.forEach(item => {
+                    const li = document.createElement("li");
+                    li.className = `lista-item ${item.comprado ? 'comprado' : ''}`;
+                    if(editandoId === item.id) li.classList.add("editing");
+
+                    li.innerHTML = `
+                        <div class="item-esquerda">
+                            <div class="checkbox-wrapper" onclick="toggleStatus(${item.id})">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="item-info">
+                                <span class="item-nome">${item.nome}</span>
+                                <div class="badges">
+                                    <span class="badge badge-qtd">${item.quantidade}x</span>
+                                    ${item.preco > 0 ? `<span class="badge badge-preco">R$ ${item.preco.toFixed(2)}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-acoes">
+                            <button class="btn-icon edit" onclick="iniciarEdicao(${item.id})">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn-icon delete" onclick="deletarItem(${item.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    listaEl.appendChild(li);
+                });
+            }
+        }
+
+        function persistir() { localStorage.setItem(STORAGE_KEY, JSON.stringify(itens)); }
+        function carregarDados() { 
+            const d = localStorage.getItem(STORAGE_KEY); 
+            if(d) itens = JSON.parse(d); 
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute("data-theme");
+            const next = current === "light" ? "dark" : "light";
+            html.setAttribute("data-theme", next);
+            localStorage.setItem("theme_v9", next);
+            
+            const icon = document.querySelector("#btn-theme i");
+            icon.className = next === "light" ? "fas fa-moon" : "fas fa-sun";
+        }
+        
+        function carregarTema() {
+            const t = localStorage.getItem("theme_v9") || "dark";
+            document.documentElement.setAttribute("data-theme", t);
+            const icon = document.querySelector("#btn-theme i");
+            icon.className = t === "light" ? "fas fa-moon" : "fas fa-sun";
+        }
+
+        function mostrarToast(msg) {
+            const t = document.getElementById("toast");
+            document.getElementById("toast-msg").innerText = msg;
+            t.classList.add("show");
+            setTimeout(() => t.classList.remove("show"), 2500);
+        }
+    </script>
+</body>
+</html>
